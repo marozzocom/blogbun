@@ -2,11 +2,12 @@ import { Database } from 'bun:sqlite'
 import { getResponse } from './utilities'
 import router from './router'
 
-const BASE_URL = 'http://localhost:3030'
+const BASE_URL = String(process.env.BASE_URL)
 const db = new Database('blog.sqlite')
 
 Bun.serve({
-  port: 3030,
+  hostname: '::',
+  port: process.env.PORT,
   fetch: async (request) => {
     try {
       return router(request)
