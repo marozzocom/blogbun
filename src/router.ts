@@ -1,42 +1,65 @@
-import { BASE_URL } from '.'
 import routes from './routes'
 import type { Handler, PathParams } from './types'
 import { notFound } from './utilities'
 
 const router = (request: Request) => {
-  const [path, search] = request.url.replace(BASE_URL, '').split('?')
-  const pathSegments = path.split('/').filter(Boolean)
-  const searchParams = new URLSearchParams(search)
+  // Process the request URL
+  const { pathname, searchParams } = new URL(request.url)
+  const requestPathSegments = pathname.split('/').filter(Boolean)
 
-  const { handler, pathParams } = routes.reduce<{
-    handler: Handler | null
-    pathParams: PathParams
+  // Check for a matching route
+  const { matchedHandler, extractedParams } = routes.reduce<{
+    matchedHandler: Handler | null
+    extractedParams: PathParams
   }>(
-    (acc, route) => {
-      if (acc.handler) return acc
+    (matchedRoute, currentRoute) => {
+      if (matchedRoute.matchedHandler) return matchedRoute
 
-      const routeSegments = route.url.split('/').filter(Boolean)
-      if (routeSegments.length !== pathSegments.length) return acc
+      const currentRouteSegments = currentRoute.url.split('/').filter(Boolean)
 
-      const pathParams = routeSegments.reduce<Record<string, string> | null>(
-        (paramsAcc, segment, index) => {
-          if (!paramsAcc) return null
-          if (segment.startsWith(':')) {
-            paramsAcc[segment.slice(1)] = pathSegments[index]
-          } else if (segment !== pathSegments[index]) {
-            return null
+      // Return previous matched route if the number of segments don't match
+      if (currentRouteSegments.length !== requestPathSegments.length) {
+        return matchedRoute
+      }
+
+      // Extract path parameters
+      const extractedPathParams = currentRouteSegments.reduce<Record<
+        string,
+        string
+      > | null>((pathParamsAcc, routeSegment, index) => {
+        if (!pathParamsAcc) return null
+
+        const requestSegment = requestPathSegments[index]
+
+        // Extract path parameters for dynamic segments
+        if (routeSegment.startsWith(':')) {
+          pathParamsAcc[routeSegment.slice(1)] = requestSegment
+          return pathParamsAcc
+        }
+
+        // If the route segment is static and doesn't match the request, return null
+        if (routeSegment !== requestSegment) {
+          return null
+        }
+
+        return pathParamsAcc
+      }, {})
+
+      // Use extracted parameters to update matchedRoute only if they exist
+      return extractedPathParams
+        ? {
+            matchedHandler: currentRoute.handler,
+            extractedParams: extractedPathParams,
           }
-          return paramsAcc
-        },
-        {},
-      )
-
-      return pathParams ? { handler: route.handler, pathParams } : acc
+        : matchedRoute
     },
-    { handler: null, pathParams: {} },
+    { matchedHandler: null, extractedParams: {} },
   )
 
-  return handler ? handler({ request, pathParams, searchParams }) : notFound
+  // Return the matched (or not found) handler
+  return matchedHandler
+    ? matchedHandler({ request, pathParams: extractedParams, searchParams })
+    : notFound
 }
 
 export default router

@@ -1,6 +1,8 @@
-import { db } from '.'
+import { Database } from 'bun:sqlite'
 import type { Route, Post, Comment } from './types'
 import { getResponse } from './utilities'
+
+const db = new Database('blog.sqlite')
 
 const routes: Array<Route> = [
   {

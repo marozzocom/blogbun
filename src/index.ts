@@ -1,9 +1,5 @@
-import { Database } from 'bun:sqlite'
 import { getResponse } from './utilities'
 import router from './router'
-
-const BASE_URL = String(process.env.BASE_URL)
-const db = new Database('blog.sqlite')
 
 Bun.serve({
   hostname: '::',
@@ -17,5 +13,3 @@ Bun.serve({
     }
   },
 })
-
-export { BASE_URL, db }
