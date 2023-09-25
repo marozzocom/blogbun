@@ -13,6 +13,7 @@
     "bun": "^1.0.3"
   },
   "scripts": {
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts"
   }
 }
