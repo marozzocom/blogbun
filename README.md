@@ -4,7 +4,7 @@ Extremely simple example of a blog API made with bun
 
 This demonstrates
 - use of [SQLite with Bun](src/routes.ts)
-- use of Bun as [HTTP server](src/index.ts)
+- use of Bun as [HTTP server](src/server.ts)
 - how to implement a tiny [router](src/router.ts) that supports path and search params
 
 To install dependencies:
